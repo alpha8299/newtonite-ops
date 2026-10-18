@@ -1,0 +1,1 @@
+C:/Users/gyanu/Downloads/newtonite-ops-project/newtonite-ops/node_modules/@embedded-postgres/windows-x64/native/bin/postgres.exe "-D" "C:\Users\gyanu\Downloads\newtonite-ops-project\newtonite-ops\.pgdata" "-p" "5432"

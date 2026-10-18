@@ -1,0 +1,24 @@
+{
+  "name": "newtonite-ops",
+  "private": true,
+  "version": "1.0.0",
+  "scripts": {
+    "dev": "concurrently -k -n db,api,web -c magenta,blue,green \"npm:db:start\" \"npm:dev:api\" \"npm:dev:web\"",
+    "dev:api": "npm --workspace backend run dev",
+    "dev:web": "npm --workspace frontend run dev",
+    "build": "npm run db:generate && npm --workspace backend run build && npm --workspace frontend run build",
+    "test": "npm --workspace backend test",
+    "db:start": "node scripts/start-db.js",
+    "db:generate": "npm --workspace backend run db:generate",
+    "db:migrate": "npm --workspace backend run db:migrate",
+    "db:seed": "npm --workspace backend run db:seed"
+  },
+  "workspaces": [
+    "backend",
+    "frontend"
+  ],
+  "devDependencies": {
+    "concurrently": "^9.1.2",
+    "embedded-postgres": "^18.4.0-beta.17"
+  }
+}

@@ -1,0 +1,103 @@
+generator client {
+  provider = "prisma-client-js"
+}
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+enum Role {
+  ADMIN
+  MEMBER
+  VIEWER
+}
+enum WorkStatus {
+  OPEN
+  IN_PROGRESS
+  BLOCKED
+  RESOLVED
+}
+enum Priority {
+  LOW
+  MEDIUM
+  HIGH
+  URGENT
+}
+model User {
+  id          String       @id @default(cuid())
+  name        String
+  email       String       @unique
+  memberships TeamMember[]
+  createdAt   DateTime     @default(now())
+  comments    Comment[]
+  auditEvents AuditEvent[]
+  idempotency IdempotencyRecord[]
+}
+model Team {
+  id        String       @id @default(cuid())
+  name      String       @unique
+  members   TeamMember[]
+  items     WorkItem[]
+  createdAt DateTime     @default(now())
+}
+model TeamMember {
+  userId String
+  teamId String
+  role   Role   @default(MEMBER)
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  team   Team   @relation(fields: [teamId], references: [id], onDelete: Cascade)
+  @@id([userId, teamId])
+  @@index([teamId, role])
+}
+model WorkItem {
+  id               String      @id @default(cuid())
+  title            String
+  description      String
+  status           WorkStatus  @default(OPEN)
+  priority         Priority    @default(MEDIUM)
+  teamId           String
+  assigneeId       String?
+  createdById      String
+  requiresApproval Boolean     @default(false)
+  version          Int         @default(1)
+  dueAt            DateTime?
+  createdAt        DateTime    @default(now())
+  updatedAt        DateTime    @updatedAt
+  team             Team        @relation(fields: [teamId], references: [id])
+  comments         Comment[]
+  auditEvents      AuditEvent[]
+  @@index([teamId, status, updatedAt])
+  @@index([assigneeId, status])
+  @@index([priority, updatedAt])
+  @@index([updatedAt])
+}
+model Comment {
+  id         String   @id @default(cuid())
+  workItemId String
+  authorId   String
+  body       String
+  createdAt  DateTime @default(now())
+  workItem   WorkItem @relation(fields: [workItemId], references: [id], onDelete: Cascade)
+  author     User     @relation(fields: [authorId], references: [id])
+  @@index([workItemId, createdAt])
+}
+model AuditEvent {
+  id         String   @id @default(cuid())
+  workItemId String
+  actorId    String
+  action     String
+  changes    Json
+  createdAt  DateTime @default(now())
+  workItem   WorkItem @relation(fields: [workItemId], references: [id], onDelete: Cascade)
+  actor      User     @relation(fields: [actorId], references: [id])
+  @@index([workItemId, createdAt])
+}
+model IdempotencyRecord {
+  id        String   @id @default(cuid())
+  userId    String
+  key       String
+  response  Json
+  createdAt DateTime @default(now())
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  @@unique([userId, key])
+  @@index([createdAt])
+}
